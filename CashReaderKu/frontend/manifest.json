@@ -1,0 +1,21 @@
+{
+  "name": "CashReader - Identifikasi Mata Uang",
+  "short_name": "CashReader",
+  "start_url": "/frontend/index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0056e0",
+  "description": "Identifikasi mata uang terpercaya dengan kejernihan profesional.",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

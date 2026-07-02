@@ -1,0 +1,25 @@
+# 1. Gunakan Python yang stabil
+FROM python:3.10-slim
+
+# 2. Set direktori utama
+WORKDIR /code
+
+# 3. Instal dependensi sistem yang diperlukan (opsional, untuk pendukung ML/OpenCV)
+RUN apt-get update && apt-get install -y \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# 4. Salin requirements dulu agar install lebih cepat
+COPY ./backend/requirements.txt /code/requirements.txt
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+
+# 5. Salin SEMUA folder (backend, frontend, assets) ke server
+COPY . .
+
+# 6. Buka port khusus Hugging Face
+EXPOSE 7860
+
+# 7. Jalankan Gunicorn. 
+# --chdir backend artinya masuk ke folder backend dulu sebelum menjalankan app.py
+CMD ["gunicorn", "-b", "0.0.0.0:7860", "--chdir", "backend", "app:app"]

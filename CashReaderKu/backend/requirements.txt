@@ -1,0 +1,6 @@
+Flask==3.0.3
+gunicorn==22.0.0
+numpy
+scikit-learn
+opencv-python-headless  # Gunakan ini jika Anda pakai OpenCV agar tidak error di Docker
+tensorflow-cpu          # Gunakan versi CPU agar hemat RAM
