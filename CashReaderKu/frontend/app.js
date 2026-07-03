@@ -5,7 +5,6 @@ if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')
             .then(reg => {
-                // Mengecek apakah ada update terbaru secara otomatis
                 reg.onupdatefound = () => {
                     const installingWorker = reg.installing;
                     installingWorker.onstatechange = () => {
@@ -29,7 +28,6 @@ let views = {};
 let mainHeader, headerText, video, canvas, predictionResult;
 
 window.addEventListener('DOMContentLoaded', () => {
-    // Memastikan elemen ada sebelum diakses
     views = {
         splash: document.getElementById('view-splash'),
         menu: document.getElementById('view-menu'),
@@ -42,7 +40,6 @@ window.addEventListener('DOMContentLoaded', () => {
     canvas = document.getElementById('capture-canvas');
     predictionResult = document.getElementById('prediction-result');
 
-    // Event Listeners dengan pengecekan null
     document.getElementById('btn-mulai-deteksi')?.addEventListener('click', () => switchView('camera'));
     document.getElementById('btn-global-keluar')?.addEventListener('click', () => {
         if(confirm("Keluar dari CashReader?")) window.close();
@@ -62,8 +59,8 @@ let poolInterval = null;
 function startCamera() {
     if (predictionResult) predictionResult.innerText = "Mencari Objek...";
     
-    // Memastikan constraints untuk HP
-    const constraints = { video: { facingMode: { exact: 'environment' } }, audio: false };
+    // Gunakan 'user' jika 'environment' tidak didukung perangkat
+    const constraints = { video: { facingMode: 'environment' }, audio: false };
     
     navigator.mediaDevices.getUserMedia(constraints)
     .then(stream => {
@@ -84,7 +81,7 @@ function stopCamera() {
 }
 
 // ==========================================
-// 4. LOGIKA DETEKSI (PENTING)
+// 4. LOGIKA DETEKSI (DIPERBAIKI)
 // ==========================================
 function captureAndPredict() {
     if (!streamInstance || !canvas || !video) return;
@@ -101,15 +98,24 @@ function captureAndPredict() {
         fetch(BACKEND_URL, { method: 'POST', body: formData })
         .then(res => res.json())
         .then(data => {
-            if (data && data.nominal && predictionResult) {
+            // Memperbaiki bug: Menambahkan kondisi else untuk mereset teks
+            if (data && data.detected && data.nominal && predictionResult) {
                 if (predictionResult.innerText !== data.nominal) {
                     predictionResult.innerText = data.nominal;
                     speakAccessibility(data.nominal, true);
                     if (navigator.vibrate) navigator.vibrate(150);
                 }
+            } else {
+                // Reset teks jika tidak ada objek yang terdeteksi
+                if (predictionResult && predictionResult.innerText !== "Mencari Objek...") {
+                    predictionResult.innerText = "Mencari Objek...";
+                }
             }
         })
-        .catch(err => console.error("Koneksi ke backend gagal:", err));
+        .catch(err => {
+            console.error("Koneksi ke backend gagal:", err);
+            if (predictionResult) predictionResult.innerText = "Mencari Objek...";
+        });
     }, 'image/jpeg', 0.7);
 }
 
