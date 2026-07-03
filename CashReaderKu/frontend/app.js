@@ -41,7 +41,7 @@ window.addEventListener('DOMContentLoaded', () => {
 // ==========================================
 // 2. BACKEND CONFIG
 // ==========================================
-const BACKEND_URL = 'http://127.0.0.1:5000/predict';
+const BACKEND_URL = 'https://cashreader.my.id/predict';
 let streamInstance = null;
 let poolInterval = null;
 
