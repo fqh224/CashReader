@@ -26,9 +26,6 @@ body {
     flex-direction: column;
 }
 
-/* ==========================================================================
-   CONTAINER UTAMA (Mendukung Penuh Mode Desktop & Mobile Secara Fleksibel)
-   ========================================================================== */
 .app-container {
     width: 100%;
     min-height: 100vh;
@@ -62,10 +59,6 @@ body {
     border-radius: 50%;
 }
 
-.header-btn:hover {
-    background: #f0f4f8;
-}
-
 .header-title {
     font-size: 18px;
     font-weight: 700;
@@ -74,7 +67,7 @@ body {
     flex: 1;
 }
 
-/* Tampilan View / Konten Halaman */
+/* Tampilan View */
 .app-view {
     flex: 1;
     display: none;
@@ -83,8 +76,8 @@ body {
     overflow-y: auto;
     background: var(--bg-color);
     width: 100%;
-    max-width: 1200px; /* Batas lebar konten agar tidak terlalu molor ke ujung monitor */
-    margin: 0 auto;    /* Menjaga konten selalu presisi di tengah layar desktop */
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .app-view.active {
@@ -130,402 +123,109 @@ body {
     box-shadow: 0 8px 20px rgba(0, 86, 224, 0.2);
 }
 
-.splash-title {
-    font-size: 26px;
-    font-weight: 700;
-    color: #0b1a30;
-    margin-bottom: 8px;
-}
+.splash-title { font-size: 26px; font-weight: 700; color: #0b1a30; margin-bottom: 8px; }
+.splash-desc { font-size: 14px; color: #5a6e85; line-height: 1.6; max-width: 260px; }
 
-.splash-desc {
-    font-size: 14px;
-    color: #5a6e85;
-    line-height: 1.6;
-    max-width: 260px;
-}
+.dots-loader { display: flex; gap: 8px; margin-bottom: 12px; }
+.dot { width: 8px; height: 8px; background: #cbd5e0; border-radius: 50%; }
+.dot.active { background: var(--primary-color); animation: pulse 1.2s infinite ease-in-out; }
 
-.dots-loader {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
-}
-
-.dot {
-    width: 8px;
-    height: 8px;
-    background: #cbd5e0;
-    border-radius: 50%;
-}
-
-.dot.active {
-    background: var(--primary-color);
-    animation: pulse 1.2s infinite ease-in-out;
-}
-
-.splash-action-text {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-}
-
-/* Menu Utama */
+/* Menu Utama - Diperbaiki */
 #view-menu {
-    justify-content: flex-start;
+    justify-content: center;
     align-items: center;
-    gap: 24px;
+    gap: 50px;
 }
 
 .main-btn-circle {
-    width: 170px;
-    height: 170px;
+    width: 240px;
+    height: 240px;
     background: linear-gradient(135deg, #1e74ff, var(--primary-color));
     border-radius: 50%;
     border: none;
-    color: white;
-    font-size: 15px;
-    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 0 30px rgba(0, 86, 224, 0.4);
+    position: relative;
+    animation: rotateBtn 10s linear infinite;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    cursor: pointer;
-    box-shadow: 0 12px 28px rgba(0, 86, 224, 0.25);
-    margin-top: 20px;
     transition: transform 0.2s;
 }
 
-.main-btn-circle:active {
-    transform: scale(0.96);
-}
-
-.menu-card {
-    width: 100%;
-    background: var(--card-bg);
-    border-radius: 20px;
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    cursor: pointer;
-    border: 1px solid #edf2f7;
-    box-shadow: var(--shadow-sm);
-}
-
-.card-icon-box {
-    width: 44px;
-    height: 44px;
-    background: #0b1a30;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-}
-
-.card-content {
-    flex: 1;
-}
-
-.card-title {
-    font-size: 15px;
-    font-weight: 700;
-    margin-bottom: 2px;
-}
-
-.card-desc {
-    font-size: 12px;
-    color: var(--text-muted);
-}
-
-.preview-placeholder-box {
-    width: 100%;
-    border: 2px dashed #cbd5e0;
-    border-radius: 20px;
-    padding: 30px 20px;
+.btn-content {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    color: var(--text-muted);
-    font-size: 13px;
-    margin-top: auto;
-    background: #ffffff;
+    gap: 15px;
+    color: white; /* Warna teks putih */
+    font-size: 18px;
+    font-weight: 700;
+    /* Melawan putaran induk agar tetap diam */
+    animation: counterRotate 10s linear infinite;
 }
 
-/* Kamera Deteksi */
-#view-camera {
-    padding: 20px;
-    gap: 24px;
-    align-items: center;
+/* Memaksa SVG menjadi putih */
+.btn-content svg {
+    stroke: white;
+    fill: none;
 }
 
-.camera-window-wrapper {
-    width: 100%;
-    background: #e2e8f0;
-    border-radius: 28px;
-    padding: 12px;
-    box-shadow: var(--shadow-md);
-}
-
-.camera-viewport {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    background: #111622;
-    border-radius: 18px;
-    overflow: hidden;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-#camera-stream {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.camera-overlay-icon {
+/* Ring Putus-putus */
+.main-btn-circle::before {
+    content: "";
     position: absolute;
-    color: rgba(255, 255, 255, 0.25);
+    width: 270px;
+    height: 270px;
+    border: 3px dashed var(--primary-color);
+    border-radius: 50%;
+    animation: rotateBtnReverse 15s linear infinite;
     pointer-events: none;
 }
 
-.result-banner {
-    width: 100%;
-    background: var(--primary-color);
-    color: white;
-    text-align: center;
-    padding: 16px;
-    font-size: 22px;
-    font-weight: 700;
-    border-radius: 0 0 16px 16px;
-    margin-top: -12px;
-    box-shadow: 0 8px 20px rgba(0, 86, 224, 0.15);
-}
+.main-btn-circle:active { transform: scale(0.96); }
 
-.action-button {
-    width: 100%;
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 16px;
-    border-radius: 30px;
+/* Tombol Keluar */
+.btn-exit {
+    background: #ffffff;
+    border: 2px solid #e53e3e;
+    color: #e53e3e;
+    padding: 14px 32px;
+    border-radius: 50px;
     font-size: 16px;
     font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 8px 20px rgba(0, 86, 224, 0.1);
-    text-align: center;
-    text-transform: lowercase;
-}
-
-/* Panduan Penggunaan */
-#view-panduan {
-    gap: 20px;
-}
-
-.panduan-header-brand {
-    text-align: center;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 6px;
-    margin-bottom: 10px;
-}
-
-.panduan-brand-title {
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--primary-color);
-}
-
-.panduan-brand-subtitle {
-    font-size: 13px;
-    color: var(--text-muted);
-}
-
-.guide-step-card {
-    background: white;
-    border-radius: 20px;
-    padding: 20px;
-    border: 1px solid #edf2f7;
+    gap: 10px;
+    cursor: pointer;
+    transition: 0.3s;
     box-shadow: var(--shadow-sm);
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
 }
 
-.step-title-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
+.btn-exit:hover { background: #e53e3e; color: white; }
 
-.step-number-badge {
-    width: 32px;
-    height: 32px;
-    background: #e6f0ff;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--primary-color);
-    font-weight: 700;
-    font-size: 14px;
-}
+/* Kamera Deteksi */
+#view-camera { padding: 20px; gap: 24px; align-items: center; }
+.camera-window-wrapper { width: 100%; max-width: 500px; background: #e2e8f0; border-radius: 28px; padding: 12px; box-shadow: var(--shadow-md); }
+.camera-viewport { width: 100%; aspect-ratio: 1 / 1; background: #111622; border-radius: 18px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
+#camera-stream { width: 100%; height: 100%; object-fit: cover; }
+.camera-overlay-icon { position: absolute; color: rgba(255, 255, 255, 0.25); pointer-events: none; }
+.result-banner { width: 100%; background: var(--primary-color); color: white; text-align: center; padding: 16px; font-size: 22px; font-weight: 700; border-radius: 0 0 16px 16px; margin-top: -12px; }
+.action-button { width: 100%; max-width: 500px; background: var(--primary-color); color: white; border: none; padding: 16px; border-radius: 30px; font-size: 16px; font-weight: 700; cursor: pointer; }
 
-.step-heading {
-    font-size: 15px;
-    font-weight: 700;
-}
-
-.step-body-text {
-    font-size: 13px;
-    color: #4a5568;
-    line-height: 1.6;
-}
-
-.guide-image-placeholder {
-    width: 100%;
-    height: 110px;
-    background: #f7fafc;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px dashed #cbd5e0;
-}
-
-.tips-container {
-    background: #eef4ff;
-    border-radius: 20px;
-    padding: 16px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.tips-title {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--primary-color);
-}
-
-.tip-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 12px;
-    color: #2d3748;
-}
-
-/* Footer */
-.app-footer {
-    margin-top: auto;
-    padding: 20px;
-    background: #ffffff;
-    border-top: 1px solid #edf2f7;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    z-index: 10;
-    width: 100%;
-}
-
+/* Footer Versi */
 .footer-version {
-    font-size: 11px;
+    margin-top: 20px; 
+    color: #a0aec0; 
+    font-size: 11px; 
     font-weight: 700;
-    color: #a0aec0;
-    letter-spacing: 0.5px;
 }
 
-.btn-exit {
-    background: none;
-    border: none;
-    color: #e53e3e;
-    font-size: 15px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-}
+/* Keyframes */
+@keyframes rotateBtn { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes rotateBtnReverse { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+@keyframes counterRotate { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+@keyframes pulse { 0%, 100% { transform: scale(0.9); opacity: 0.4; } 50% { transform: scale(1.1); opacity: 1; } }
 
-/* Utilities & Keyframes */
-.hidden-canvas { 
-    display: none; 
-}
-
-@keyframes pulse {
-    0%, 100% { transform: scale(0.9); opacity: 0.4; }
-    50% { transform: scale(1.1); opacity: 1; }
-}
-
-
-/* ==========================================================================
-   MEDIA QUERIES DESKTOP (Pengaturan Otomatis Saat Layar Lebar)
-   ========================================================================== */
-@media (min-width: 768px) {
-    /* Merubah susunan letak menu utama menjadi menyamping horizontal */
-    #view-menu {
-        display: none; 
-        flex-direction: row;        
-        flex-wrap: wrap;
-        justify-content: center;
-        align-items: center;
-        gap: 40px;
-        padding-top: 60px;
-    }
-    
-    #view-menu.active {
-        display: flex;
-    }
-
-    /* Memperbesar tombol deteksi agar mudah ditekan di layar desktop */
-    .main-btn-circle {
-        width: 220px;               
-        height: 220px;
-        font-size: 16px;
-        margin-top: 0;
-    }
-
-    /* Membatasi kartu panduan agar pas berada di sisi kanan tombol bulat */
-    .menu-card {
-        max-width: 380px;           
-    }
-
-    /* Mengatur letak kotak tempat penampung gambar */
-    .preview-placeholder-box {
-        width: 100%;
-        max-width: 640px;           
-        margin: 40px auto 0 auto;
-    }
-    
-    /* Mengamankan jendela kamera agar video streaming proporsional di desktop */
-    .camera-window-wrapper {
-        max-width: 500px;
-        margin: 0 auto;
-    }
-    
-    /* Mengubah struktur halaman teks panduan menjadi 2 kolom kiri-kanan */
-    #view-panduan {
-        display: none;
-        max-width: 900px;
-    }
-    #view-panduan.active {
-        display: grid;
-        grid-template-columns: 1fr 1fr; 
-        gap: 24px;
-        padding-top: 40px;
-    }
-    .panduan-header-brand, .tips-container {
-        grid-column: span 2; 
-    }
-}
+.hidden-canvas { display: none; }
