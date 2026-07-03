@@ -1,20 +1,35 @@
 // ==========================================
-// 1. REGISTRASI SERVICE WORKER & INISIALISASI
+// 1. REGISTRASI SERVICE WORKER (DENGAN REFRESH OTOMATIS)
 // ==========================================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')
-            .then(reg => console.log('PWA Service Worker berhasil didaftarkan:', reg.scope))
-            .catch(err => console.error('PWA Service Worker gagal didaftarkan:', err));
+            .then(reg => {
+                // Mengecek apakah ada update terbaru secara otomatis
+                reg.onupdatefound = () => {
+                    const installingWorker = reg.installing;
+                    installingWorker.onstatechange = () => {
+                        if (installingWorker.state === 'installed') {
+                            if (navigator.serviceWorker.controller) {
+                                console.log('Update baru tersedia, memuat ulang...');
+                                window.location.reload();
+                            }
+                        }
+                    };
+                };
+            })
+            .catch(err => console.error('PWA Service Worker gagal:', err));
     });
 }
 
-// Variabel penampung elemen
+// ==========================================
+// 2. INISIALISASI & PENGAMANAN ELEMEN
+// ==========================================
 let views = {};
 let mainHeader, headerText, video, canvas, predictionResult;
 
-// Inisialisasi setelah DOM siap
 window.addEventListener('DOMContentLoaded', () => {
+    // Memastikan elemen ada sebelum diakses
     views = {
         splash: document.getElementById('view-splash'),
         menu: document.getElementById('view-menu'),
@@ -27,66 +42,39 @@ window.addEventListener('DOMContentLoaded', () => {
     canvas = document.getElementById('capture-canvas');
     predictionResult = document.getElementById('prediction-result');
 
-    // Event Listener Navigasi setelah DOM siap
+    // Event Listeners dengan pengecekan null
     document.getElementById('btn-mulai-deteksi')?.addEventListener('click', () => switchView('camera'));
     document.getElementById('btn-global-keluar')?.addEventListener('click', () => {
         if(confirm("Keluar dari CashReader?")) window.close();
     });
     document.getElementById('btn-camera-back')?.addEventListener('click', () => switchView('menu'));
 
-    // Pindah ke fungsi selamat datang
     setTimeout(ucapkanSelamatDatangDanPindah, 500);
 });
 
 // ==========================================
-// 2. BACKEND CONFIG
+// 3. BACKEND & KAMERA
 // ==========================================
 const BACKEND_URL = 'https://cashreader.my.id/predict';
 let streamInstance = null;
 let poolInterval = null;
 
-// ==========================================
-// 3. FUNGSI SUARA & TRANSISI
-// ==========================================
-function ucapkanSelamatDatangDanPindah() {
-    const pesan = "Selamat datang di aplikasi CashReader, platform deteksi nominal uang rupiah.";
-    const utterance = new SpeechSynthesisUtterance(pesan);
-    utterance.lang = 'id-ID';
-    utterance.onend = () => switchView('menu');
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
-}
-
-// ==========================================
-// 4. MEKANISME NAVIGASI
-// ==========================================
-function switchView(viewName) {
-    Object.values(views).forEach(v => { if (v) v.classList.remove('active'); });
-    
-    if (viewName === 'menu') {
-        if (mainHeader) mainHeader.style.display = 'none';
-        stopCamera();
-        setTimeout(() => speakAccessibility("Menu Utama. Tekan tombol mulai deteksi."), 500);
-    } else if (viewName === 'camera') {
-        if (mainHeader) mainHeader.style.display = 'flex';
-        if (headerText) headerText.innerText = 'Deteksi Uang';
-        startCamera();
-    }
-    
-    if (views[viewName]) views[viewName].classList.add('active');
-}
-
-// ==========================================
-// 5. KONTROL KAMERA & PREDIKSI
-// ==========================================
 function startCamera() {
     if (predictionResult) predictionResult.innerText = "Mencari Objek...";
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+    
+    // Memastikan constraints untuk HP
+    const constraints = { video: { facingMode: { exact: 'environment' } }, audio: false };
+    
+    navigator.mediaDevices.getUserMedia(constraints)
     .then(stream => {
         streamInstance = stream;
         if (video) video.srcObject = stream;
+        if (poolInterval) clearInterval(poolInterval);
         poolInterval = setInterval(captureAndPredict, 1000); 
-    }).catch(() => { if (predictionResult) predictionResult.innerText = "Kamera Gagal"; });
+    }).catch(err => {
+        console.error("Kamera error:", err);
+        if (predictionResult) predictionResult.innerText = "Izin Kamera Diperlukan";
+    });
 }
 
 function stopCamera() {
@@ -95,6 +83,9 @@ function stopCamera() {
     streamInstance = null;
 }
 
+// ==========================================
+// 4. LOGIKA DETEKSI (PENTING)
+// ==========================================
 function captureAndPredict() {
     if (!streamInstance || !canvas || !video) return;
     
@@ -110,37 +101,44 @@ function captureAndPredict() {
         fetch(BACKEND_URL, { method: 'POST', body: formData })
         .then(res => res.json())
         .then(data => {
-            if (data.detected && data.nominal) {
+            if (data && data.nominal && predictionResult) {
                 if (predictionResult.innerText !== data.nominal) {
                     predictionResult.innerText = data.nominal;
                     speakAccessibility(data.nominal, true);
                     if (navigator.vibrate) navigator.vibrate(150);
                 }
-            } else {
-                predictionResult.innerText = "Mencari Objek...";
             }
         })
-        .catch(() => {
-            predictionResult.innerText = "Mencari Objek...";
-        });
-    }, 'image/jpeg', 0.8);
+        .catch(err => console.error("Koneksi ke backend gagal:", err));
+    }, 'image/jpeg', 0.7);
 }
 
 // ==========================================
-// 6. FUNGSI AKSESIBILITAS SUARA
+// 5. NAVIGASI & SUARA
 // ==========================================
-let lastSpoken = "";
-let lastSpokenTime = 0;
-function speakAccessibility(text, limit = false) {
-    if (!text) return;
-    const now = Date.now();
-    if (limit && text === lastSpoken && (now - lastSpokenTime < 4000)) return;
-
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'id-ID';
-    window.speechSynthesis.speak(utterance);
+function switchView(viewName) {
+    Object.values(views).forEach(v => { if (v) v.classList.remove('active'); });
     
-    lastSpoken = text;
-    lastSpokenTime = now;
+    if (viewName === 'menu') {
+        if (mainHeader) mainHeader.style.display = 'none';
+        stopCamera();
+    } else if (viewName === 'camera') {
+        if (mainHeader) mainHeader.style.display = 'flex';
+        startCamera();
+    }
+    if (views[viewName]) views[viewName].classList.add('active');
+}
+
+function ucapkanSelamatDatangDanPindah() {
+    const msg = new SpeechSynthesisUtterance("Selamat datang di CashReader.");
+    msg.lang = 'id-ID';
+    msg.onend = () => switchView('menu');
+    window.speechSynthesis.speak(msg);
+}
+
+function speakAccessibility(text, limit = false) {
+    window.speechSynthesis.cancel();
+    const msg = new SpeechSynthesisUtterance(text);
+    msg.lang = 'id-ID';
+    window.speechSynthesis.speak(msg);
 }
