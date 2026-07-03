@@ -1,5 +1,5 @@
 // ==========================================
-// 1. REGISTRASI SERVICE WORKER
+// 1. REGISTRASI SERVICE WORKER & INISIALISASI
 // ==========================================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -9,18 +9,34 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// --- KOORDINASI ELEMENT DENGAN HTML ---
-const views = {
-    splash: document.getElementById('view-splash'),
-    menu: document.getElementById('view-menu'),
-    camera: document.getElementById('view-camera')
-};
+// Variabel penampung elemen
+let views = {};
+let mainHeader, headerText, video, canvas, predictionResult;
 
-const mainHeader = document.getElementById('main-header');
-const headerText = document.getElementById('header-text');
-const video = document.getElementById('camera-stream');
-const canvas = document.getElementById('capture-canvas');
-const predictionResult = document.getElementById('prediction-result');
+// Inisialisasi setelah DOM siap
+window.addEventListener('DOMContentLoaded', () => {
+    views = {
+        splash: document.getElementById('view-splash'),
+        menu: document.getElementById('view-menu'),
+        camera: document.getElementById('view-camera')
+    };
+
+    mainHeader = document.getElementById('main-header');
+    headerText = document.getElementById('header-text');
+    video = document.getElementById('camera-stream');
+    canvas = document.getElementById('capture-canvas');
+    predictionResult = document.getElementById('prediction-result');
+
+    // Event Listener Navigasi setelah DOM siap
+    document.getElementById('btn-mulai-deteksi')?.addEventListener('click', () => switchView('camera'));
+    document.getElementById('btn-global-keluar')?.addEventListener('click', () => {
+        if(confirm("Keluar dari CashReader?")) window.close();
+    });
+    document.getElementById('btn-camera-back')?.addEventListener('click', () => switchView('menu'));
+
+    // Pindah ke fungsi selamat datang
+    setTimeout(ucapkanSelamatDatangDanPindah, 500);
+});
 
 // ==========================================
 // 2. BACKEND CONFIG
@@ -41,10 +57,6 @@ function ucapkanSelamatDatangDanPindah() {
     window.speechSynthesis.speak(utterance);
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(ucapkanSelamatDatangDanPindah, 500);
-});
-
 // ==========================================
 // 4. MEKANISME NAVIGASI
 // ==========================================
@@ -64,13 +76,6 @@ function switchView(viewName) {
     if (views[viewName]) views[viewName].classList.add('active');
 }
 
-// Event Navigasi
-document.getElementById('btn-mulai-deteksi')?.addEventListener('click', () => switchView('camera'));
-document.getElementById('btn-global-keluar')?.addEventListener('click', () => {
-    if(confirm("Keluar dari CashReader?")) window.close();
-});
-document.getElementById('btn-camera-back')?.addEventListener('click', () => switchView('menu'));
-
 // ==========================================
 // 5. KONTROL KAMERA & PREDIKSI
 // ==========================================
@@ -80,7 +85,6 @@ function startCamera() {
     .then(stream => {
         streamInstance = stream;
         if (video) video.srcObject = stream;
-        // Interval diperlambat sedikit agar tidak membebani backend
         poolInterval = setInterval(captureAndPredict, 1000); 
     }).catch(() => { if (predictionResult) predictionResult.innerText = "Kamera Gagal"; });
 }
@@ -106,7 +110,6 @@ function captureAndPredict() {
         fetch(BACKEND_URL, { method: 'POST', body: formData })
         .then(res => res.json())
         .then(data => {
-            // Logika baru: jika terdeteksi, update teks. Jika tidak, reset ke "Mencari Objek..."
             if (data.detected && data.nominal) {
                 if (predictionResult.innerText !== data.nominal) {
                     predictionResult.innerText = data.nominal;
@@ -118,7 +121,6 @@ function captureAndPredict() {
             }
         })
         .catch(() => {
-            // Jika error koneksi ke backend, tetap tampilkan status mencari
             predictionResult.innerText = "Mencari Objek...";
         });
     }, 'image/jpeg', 0.8);
@@ -132,7 +134,6 @@ let lastSpokenTime = 0;
 function speakAccessibility(text, limit = false) {
     if (!text) return;
     const now = Date.now();
-    // Jika limit aktif dan teks sama, jangan bicara lagi dalam 4 detik
     if (limit && text === lastSpoken && (now - lastSpokenTime < 4000)) return;
 
     window.speechSynthesis.cancel();
