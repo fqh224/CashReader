@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cashreader-v1';
+const CACHE_NAME = 'cashreader-v2';
 const ASSETS = [
   'index.html',
   'style.css',
