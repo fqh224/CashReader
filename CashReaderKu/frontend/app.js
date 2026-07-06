@@ -1,9 +1,12 @@
 // ==========================================
 // 1. REGISTRASI SERVICE WORKER
 // ==========================================
+// Di dalam file /root/CashReader/CashReaderKu/frontend/app.js
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
+        // Menggunakan '/sw.js' (dengan garis miring di depan) agar mencari di root
+        navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('SW terdaftar di:', reg.scope))
             .catch(err => console.error('SW Registration Failed:', err));
     });
 }
