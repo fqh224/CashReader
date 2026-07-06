@@ -4,16 +4,18 @@
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')
-            .then(reg => console.log('Service Worker terdaftar:', reg.scope))
-            .catch(err => console.error('Gagal daftar SW:', err));
+            .catch(err => console.error('SW Registration Failed:', err));
     });
 }
 
 // ==========================================
-// 2. INISIALISASI ELEMEN (DENGAN DOMContentLoaded)
+// 2. INISIALISASI & STATE
 // ==========================================
 let views = {};
 let mainHeader, headerText, video, canvas, predictionResult;
+const BACKEND_URL = 'https://cashreader.my.id/predict'; 
+let streamInstance = null;
+let poolInterval = null;
 
 window.addEventListener('DOMContentLoaded', () => {
     views = {
@@ -28,66 +30,65 @@ window.addEventListener('DOMContentLoaded', () => {
     canvas = document.getElementById('capture-canvas');
     predictionResult = document.getElementById('prediction-result');
 
-    // Event Navigasi
+    // Event Navigasi Aman
     document.getElementById('btn-mulai-deteksi')?.addEventListener('click', () => switchView('camera'));
-    document.getElementById('btn-global-keluar')?.addEventListener('click', () => {
-        if(confirm("Keluar dari CashReader?")) window.close();
-    });
+    document.getElementById('btn-global-keluar')?.addEventListener('click', () => window.close());
     document.getElementById('btn-camera-back')?.addEventListener('click', () => switchView('menu'));
 
-    // Pindah ke fungsi selamat datang
-    setTimeout(ucapkanSelamatDatangDanPindah, 500);
+    // Inisialisasi otomatis setelah delay pendek
+    setTimeout(prepareApp, 800);
 });
 
 // ==========================================
-// 3. BACKEND CONFIG (WAJIB MENGGUNAKAN DOMAIN)
+// 3. FUNGSI LOGIKA UTAMA
 // ==========================================
-const BACKEND_URL = 'https://cashreader.my.id/predict'; 
-let streamInstance = null;
-let poolInterval = null;
-
-// ==========================================
-// 4. FUNGSI SUARA & TRANSISI
-// ==========================================
-function ucapkanSelamatDatangDanPindah() {
-    const pesan = "Selamat datang di aplikasi CashReader, platform deteksi nominal uang rupiah.";
-    speakAccessibility(pesan, false, () => switchView('menu'));
+function prepareApp() {
+    // Membuka kunci audio secara paksa jika browser memblokir (autostart)
+    window.speechSynthesis.cancel();
+    ucapkanSelamatDatangDanPindah();
 }
 
 function switchView(viewName) {
+    if (!views[viewName]) return;
+    
+    // Sembunyikan semua
     Object.values(views).forEach(v => { if (v) v.classList.remove('active'); });
+    
+    // Tampilkan target
+    views[viewName].classList.add('active');
     
     if (viewName === 'menu') {
         if (mainHeader) mainHeader.style.display = 'none';
         stopCamera();
-        setTimeout(() => {
-            speakAccessibility("Menu utama. Silahkan klik tombol mulai deteksi untuk mulai melakukan deteksi uang. Untuk keluar dari aplikasi, silahkan tekan tombol keluar.");
-        }, 500);
     } else if (viewName === 'camera') {
         if (mainHeader) mainHeader.style.display = 'flex';
         if (headerText) headerText.innerText = 'Deteksi Uang';
         startCamera();
     }
-    
-    if (views[viewName]) views[viewName].classList.add('active');
 }
 
 // ==========================================
-// 5. KONTROL KAMERA & PREDIKSI
+// 4. KONTROL KAMERA & PREDIKSI (DENGAN TIMEOUT)
 // ==========================================
 function startCamera() {
     if (predictionResult) predictionResult.innerText = "Mencari Objek...";
+    
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
     .then(stream => {
         streamInstance = stream;
         if (video) video.srcObject = stream;
-        poolInterval = setInterval(captureAndPredict, 1000); 
-    }).catch(() => { if (predictionResult) predictionResult.innerText = "Kamera Gagal"; });
+        poolInterval = setInterval(captureAndPredict, 1500); // Diperlambat untuk stabilitas
+    }).catch(err => { 
+        console.error("Camera Error:", err);
+        if (predictionResult) predictionResult.innerText = "Kamera Tidak Tersedia"; 
+    });
 }
 
 function stopCamera() {
     if (poolInterval) clearInterval(poolInterval);
-    if (streamInstance) streamInstance.getTracks().forEach(track => track.stop());
+    if (streamInstance) {
+        streamInstance.getTracks().forEach(track => track.stop());
+    }
     streamInstance = null;
 }
 
@@ -103,31 +104,40 @@ function captureAndPredict() {
         const formData = new FormData();
         formData.append('image', blob, 'frame.jpg');
         
-        fetch(BACKEND_URL, { method: 'POST', body: formData })
+        // Timeout 5 detik agar tidak hang
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        fetch(BACKEND_URL, { method: 'POST', body: formData, signal: controller.signal })
         .then(res => res.json())
         .then(data => {
+            clearTimeout(timeoutId);
             if (data.detected && data.nominal) {
                 if (predictionResult.innerText !== data.nominal) {
                     predictionResult.innerText = data.nominal;
                     speakAccessibility(data.nominal, true);
                     if (navigator.vibrate) navigator.vibrate(150);
                 }
-            } else {
-                predictionResult.innerText = "Mencari Objek...";
             }
         })
-        .catch(() => { predictionResult.innerText = "Mencari Objek..."; });
-    }, 'image/jpeg', 0.8);
+        .catch(() => { clearTimeout(timeoutId); });
+    }, 'image/jpeg', 0.7);
 }
 
 // ==========================================
-// 6. FUNGSI AKSESIBILITAS SUARA
+// 5. AKSESIBILITAS SUARA (ROBUST)
 // ==========================================
-function speakAccessibility(text, limit = false, onEndCallback = null) {
-    if (!text) return;
-    window.speechSynthesis.cancel();
+function speakAccessibility(text, isDetection = false, onEndCallback = null) {
+    if (!text || (isDetection && window.speechSynthesis.speaking)) return;
+    
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'id-ID';
+    utterance.rate = 1.1;
     if (onEndCallback) utterance.onend = onEndCallback;
     window.speechSynthesis.speak(utterance);
+}
+
+function ucapkanSelamatDatangDanPindah() {
+    const pesan = "Selamat datang di aplikasi CashReader. Aplikasi siap digunakan.";
+    speakAccessibility(pesan, false, () => switchView('menu'));
 }
