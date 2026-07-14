@@ -1,25 +1,20 @@
-const CACHE_NAME = 'cashreader-v2';
-const ASSETS = [
-  'index.html',
-  'style.css',
-  'app.js',
-  'manifest.json'
-];
+const CACHE_NAME = 'cashreader-v3'; // Naikkan versinya!
+const ASSETS = ['/', '/index.html', '/style.css', '/app.js', '/manifest.json'];
 
-// Tahap Install: Menyimpan aset penting ke dalam cache
 self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
-    })
-  );
+    e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));
+    self.skipWaiting(); // Paksa instalasi baru segera
 });
 
-// Tahap Fetch: Mengambil data dari cache jika sedang offline
+self.addEventListener('activate', (e) => {
+    e.waitUntil(
+        caches.keys().then(keys => Promise.all(
+            keys.map(key => { if (key !== CACHE_NAME) return caches.delete(key); })
+        ))
+    );
+    self.clients.claim(); // Ambil kontrol halaman segera
+});
+
 self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((response) => {
-      return response || fetch(e.request);
-    })
-  );
+    e.respondWith(caches.match(e.request).then(res => res || fetch(e.request)));
 });
