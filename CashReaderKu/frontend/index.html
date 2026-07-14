@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
+<div id="debug-log" style="position:fixed; bottom:0; width:100%; height:150px; background:black; color:lime; font-size:10px; overflow-y:scroll; z-index:9999; text-align: left; padding: 5px;"></div>
     <div class="app-container">
         <header class="app-header" id="main-header" style="display: none;">
             <button class="header-btn" id="btn-header-back" aria-label="Kembali">
@@ -82,6 +82,15 @@
     </div>
 
     <canvas id="capture-canvas" class="hidden-canvas"></canvas>
+
+    <script>
+      window.onerror = function(msg, url, line) {
+        var log = document.getElementById('debug-log');
+        log.innerHTML += "Error: " + msg + " di baris " + line + "<br>";
+        console.error("Error: " + msg + " di baris " + line);
+        return false;
+      };
+    </script>
     <script src="app.js"></script>
 </body>
 </html>
