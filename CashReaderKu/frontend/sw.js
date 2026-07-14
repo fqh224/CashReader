@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cashreader-v3'; // Naikkan versinya!
+const CACHE_NAME = 'cashreader-v1'; // Naikkan versinya!
 const ASSETS = ['/', '/index.html', '/style.css', '/app.js', '/manifest.json'];
 
 self.addEventListener('install', (e) => {
